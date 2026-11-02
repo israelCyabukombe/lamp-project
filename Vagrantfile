@@ -15,9 +15,17 @@ Vagrant.configure("2") do |config|
 
   config.vm.box = "bento/debian-13"
   config.vm.box_version = "202510.26.0"
-  config.vm.synced_folder "../devprofile-Iz", "/var/www/devprofile-Iz"
-  config.vm.network "forwarded_port", guest: 80, host: 8080, host_ip: "127.0.0.1"
-  
+
+  config.vm.define "web" do |web|
+    web.vm.hostname = "web"
+    web.vm.synced_folder "../devprofile-Iz", "/var/www/devprofile-Iz"
+    web.vm.network "forwarded_port", guest: 80, host: 8080, host_ip: "127.0.0.1"
+
+    web.vm.provider "vmware_desktop" do |v|
+      v.vmx["displayName"] = "web (vagrant)"
+    end
+  end
+
   # Disable automatic box update checking. If you disable this, then
   # boxes will only be checked for updates when the user runs
   # `vagrant box outdated`. This is not recommended.

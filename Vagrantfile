@@ -19,10 +19,17 @@ Vagrant.configure("2") do |config|
   config.vm.define "web" do |web|
     web.vm.hostname = "web"
     web.vm.synced_folder "../devprofile-Iz", "/var/www/devprofile-Iz"
+    web.vm.synced_folder "salt/roots/", "/srv/salt"
     web.vm.network "forwarded_port", guest: 80, host: 8080, host_ip: "127.0.0.1"
 
     web.vm.provider "vmware_desktop" do |v|
       v.vmx["displayName"] = "web (vagrant)"
+    end
+
+    web.vm.provision :salt do |salt|
+      salt.masterless = true
+      salt.minion_config = "salt/minion"
+      salt.run_highstate = true
     end
   end
 
@@ -90,22 +97,9 @@ Vagrant.configure("2") do |config|
     set -e
     apt-get update
     DEBIAN_FRONTEND=noninteractive apt-get install -y \
-      apache2 mariadb-server php-cli libapache2-mod-php php-mysql \
+      mariadb-server php-cli libapache2-mod-php php-mysql \
       php-mbstring php-xml php-curl
-    a2enmod rewrite
-    printf '%s\n' \
-      '<VirtualHost *:80>' \
-      '    DocumentRoot /var/www/devprofile-Iz/public' \
-      '    <Directory /var/www/devprofile-Iz/public>' \
-      '        AllowOverride All' \
-      '        Require all granted' \
-      '    </Directory>' \
-      '</VirtualHost>' \
-      > /etc/apache2/sites-available/devprofile-Iz.conf
-    a2dissite 000-default.conf
-    a2ensite devprofile-Iz.conf
-    systemctl enable --now apache2 mariadb
-    systemctl reload apache2
+    systemctl enable --now mariadb
   SHELL
   
 end

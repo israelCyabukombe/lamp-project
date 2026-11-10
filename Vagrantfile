@@ -20,6 +20,7 @@ Vagrant.configure("2") do |config|
     web.vm.hostname = "web"
     web.vm.synced_folder "../devprofile-Iz", "/var/www/devprofile-Iz"
     web.vm.synced_folder "salt/roots/", "/srv/salt"
+    web.vm.synced_folder "salt/pillar/", "/srv/pillar"
     web.vm.network "forwarded_port", guest: 80, host: 8080, host_ip: "127.0.0.1"
 
     web.vm.provider "vmware_desktop" do |v|

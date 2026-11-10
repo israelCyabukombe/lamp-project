@@ -96,9 +96,7 @@ Vagrant.configure("2") do |config|
   config.vm.provision "shell", inline: <<-SHELL
     set -e
     apt-get update
-    DEBIAN_FRONTEND=noninteractive apt-get install -y \
-      mariadb-server php-cli libapache2-mod-php php-mysql \
-      php-mbstring php-xml php-curl
+    DEBIAN_FRONTEND=noninteractive apt-get install -y mariadb-server
     systemctl enable --now mariadb
   SHELL
   

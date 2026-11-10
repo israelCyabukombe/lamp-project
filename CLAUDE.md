@@ -50,13 +50,16 @@ Both run Debian 13: Apache 2.4.68, PHP 8.4, MariaDB 11.8 (bound to 127.0.0.1:330
 - I use Git Bash: paths look like `/c/Users/israe/source/repos/Lamp-project`, not `C:\...`.
 
 ## Next steps (in order)
-**Resume here:** Step 3 (Salt), `apache` state done and verified on a fresh VM on Nov 7, 2026 (`vagrant destroy` + `vagrant up`: highstate passed, second run 0 changes, `curl -I http://localhost:8080` from the laptop gives Laravel's 500 because there's no DB yet). Next: merge `feature/Salt_Implementation` to `master`, then start the `php` state on a new branch.
+**Resume here:** Step 3 (Salt), `apache` state done and verified on a fresh VM on Nov 7, 2026 (`vagrant destroy` + `vagrant up`: highstate passed, second run 0 changes, `curl -I http://localhost:8080` from the laptop gives Laravel's 500 because there's no DB yet). Merged to `master` (rebase and merge) on Nov 9, 2026. Now on branch `feature/salt-php`, starting the `php` state (nothing written yet).
 - Done and verified on the existing VM: `:salt` provisioner added, Apache lines removed from the shell script, `apache` state passes 6/6 and is idempotent (second `sudo salt-call --local state.apply` shows 0 changes). Committed (amended into "Add masterless salt").
 - Salt 3008 gotcha: `apache_module` / `apache_site` states fail ("`__virtual__` returned False: apache module could not be loaded") because 3008 no longer ships `deb_apache.py` (the `a2enmod`/`a2ensite` functions moved to a Salt extension). Fix used: `cmd.run` with `a2enmod`/`a2ensite`/`a2dissite`, made idempotent with `creates:` (symlink in `mods-enabled`/`sites-enabled`) and `onlyif: test -e ...`. `apache-service` watches them as `cmd: <ID>`. Work may run an older Salt where `apache_module` still works.
 - Line endings: files created on Windows were CRLF, so `file.managed` showed every line changed. Switched Salt files to LF in VS Code. Later: add `.gitattributes` to force LF.
 - Vagrant only prints Salt's output when a state fails (optional later: `salt.verbose = true`). Port 8080 exists only on the laptop; inside the VM use `curl -I http://localhost` (port 80).
 - If `vagrant destroy` is interrupted (Ctrl+C) and later commands say "another process is already executing an action", kill stuck Ruby: `tasklist | grep -i ruby`, then `taskkill //F //IM ruby.exe` (double slashes in Git Bash). Never kill `vagrant-vmware-utility`.
 - Next: the `php` state (same pattern as `apache`: write state, remove matching shell lines, idempotency + fresh-VM test).
+  - Already worked out: the 6 PHP packages are `php-cli libapache2-mod-php php-mysql php-mbstring php-xml php-curl` (`mariadb-server` stays in shell until the `mariadb` state). The state must `require` `pkg: apache-package` because installing `libapache2-mod-php` changes Apache's config (switches to `mpm_prefork`, enables `php8.4`).
+  - Step 14 (start here): create `salt/roots/php/init.sls` (LF endings) with `include: - apache` and one `pkg.installed` state `php-packages` using `pkgs:` (list) + `require: - pkg: apache-package`; add `- php` to `top.sls` under `apache`. Don't edit the shell script or run anything yet.
+  - Open question for me to answer: does anything reload Apache after the PHP packages install, and does it matter on a fresh VM?
 - If `vagrant up` says port 8080 is in use and the owner is `vmnat`, delete the stale 8080/2222 forwards in Virtual Network Editor → VMnet8 → NAT Settings. Always stop the VM with `vagrant halt`.
 
 1. **Finish the rename and recreate the database.**

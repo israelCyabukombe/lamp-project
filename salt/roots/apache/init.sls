@@ -30,6 +30,16 @@ apache-default-site-disabled:
     - require:
       - pkg: apache-package
 
+devprofile-view-cache:
+  file.directory:
+    - name: /var/cache/devprofile-Iz/views
+    - user: www-data
+    - group: www-data
+    - mode: 755
+    - makedirs: True
+    - require:
+      - pkg: apache-package
+
 apache-service:
   service.running:
     - name: apache2
@@ -40,3 +50,5 @@ apache-service:
       - file: apache-site-config
       - cmd: apache-site-enabled
       - cmd: apache-default-site-disabled
+    - require:
+      - file: devprofile-view-cache
